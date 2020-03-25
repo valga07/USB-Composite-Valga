@@ -159,8 +159,8 @@ __ALIGN_BEGIN uint8_t USBD_Composite_CfgFSDesc[USB_COMPOSITE_CONFIG_DESC_SIZ] __
   0x05,   /* bFunctionLength */
   0x24,   /* bDescriptorType: CS_INTERFACE */
   0x06,   /* bDescriptorSubtype: Union func desc */
-  0x00,   /* bMasterInterface: Communication class interface */
-  0x01,   /* bSlaveInterface0: Data Class Interface */
+  0x01,   /* bMasterInterface: Communication class interface */
+  0x02,   /* bSlaveInterface0: Data Class Interface */
 
   /*Endpoint 2 Descriptor*/
   0x07,                           /* bLength: Endpoint Descriptor size */
