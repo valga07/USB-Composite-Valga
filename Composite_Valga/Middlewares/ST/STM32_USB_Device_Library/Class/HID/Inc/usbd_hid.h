@@ -41,7 +41,7 @@ extern "C" {
 /** @defgroup USBD_HID_Exported_Defines
   * @{
   */
-#define HID_EPIN_ADDR                 0x85U
+#define HID_EPIN_ADDR                 0x83U
 #define HID_EPIN_SIZE                 0x08U//0x04U
 
 #define USB_HID_CONFIG_DESC_SIZ       34U

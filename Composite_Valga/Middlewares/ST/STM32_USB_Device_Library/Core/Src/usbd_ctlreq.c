@@ -505,9 +505,10 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev,
           break;
 
         case USBD_IDX_INTERFACE_STR:
+        case (USBD_IDX_INTERFACE_STR + 1):
           if (pdev->pDesc->GetInterfaceStrDescriptor != NULL)
           {
-            pbuf = pdev->pDesc->GetInterfaceStrDescriptor(pdev->dev_speed, &len);
+            pbuf = pdev->pDesc->GetInterfaceStrDescriptor(pdev->dev_speed, &len, (uint8_t)(req->wValue));
           }
           else
           {

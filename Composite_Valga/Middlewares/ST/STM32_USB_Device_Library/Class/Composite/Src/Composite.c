@@ -84,7 +84,7 @@ __ALIGN_BEGIN uint8_t USBD_Composite_CfgFSDesc[USB_COMPOSITE_CONFIG_DESC_SIZ] __
   0x00,
   /*0x02*/0X03,   /* bNumInterfaces: 2 interface */ /*3 iNTERFACES = 2CDC + 1HID*/
   0x01,   /* bConfigurationValue: Configuration value */
-  0x04,   /* iConfiguration: Index of string descriptor describing the configuration */
+  0x00,   /* iConfiguration: Index of string descriptor describing the configuration */
   0xE0,   /* bmAttributes: self powered */
   0x32,   /* MaxPower 0 mA */
 
@@ -133,7 +133,7 @@ __ALIGN_BEGIN uint8_t USBD_Composite_CfgFSDesc[USB_COMPOSITE_CONFIG_DESC_SIZ] __
   0x02,   /* bInterfaceClass: Communication Interface Class */
   0x02,   /* bInterfaceSubClass: Abstract Control Model */
   0x01,   /* bInterfaceProtocol: Common AT commands */
-  0x04,   /* iInterface: */
+  0x00,   /* iInterface: */
 
   /*Header Functional Descriptor*/
   0x05,   /* bLength: Endpoint Descriptor size */
@@ -181,7 +181,7 @@ __ALIGN_BEGIN uint8_t USBD_Composite_CfgFSDesc[USB_COMPOSITE_CONFIG_DESC_SIZ] __
   0x0A,   /* bInterfaceClass: CDC */
   0x00,   /* bInterfaceSubClass: */
   0x00,   /* bInterfaceProtocol: */
-  0x04,   /* iInterface: */
+  0x06,   /* iInterface: */
 
   /*Endpoint OUT Descriptor*/
   0x07,   /* bLength: Endpoint Descriptor size */

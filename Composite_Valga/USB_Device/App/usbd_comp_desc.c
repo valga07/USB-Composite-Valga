@@ -11,13 +11,13 @@
 
 #define USBD_VID     1155
 #define USBD_LANGID_STRING     1033
-#define USBD_MANUFACTURER_STRING     "STMicroelectronics"
+#define USBD_MANUFACTURER_STRING     "CIC - IPN"
 #define USBD_PID     54321//22336
 #define USBD_PRODUCT_STRING     "STM32 POLILOP"
-#define USBD_CONFIGURATION_STRING     "CDC Vcom and HID"
-#define USBD_INTERFACE_COMP_STRING	  "Interfaz Comp"
-#define USBD_INTERFACE_CDC_STRING     "CDC Interface"
-#define USBD_INTERFACE_HID_STRING	  "HID Interface"
+#define USBD_CONFIGURATION_STRING     "LOP CDC Vcom and HID"
+#define USBD_INTERFACE_COMP_STRING	  "Interfaz Composite LOP"
+#define USBD_INTERFACE_CDC_STRING     "Poli-LOP CDC Interface"
+#define USBD_INTERFACE_HID_STRING	  "Poli-LOP HID Interface"
 
 static void Get_SerialNum(void);
 static void IntToUnicode(uint32_t value, uint8_t * pbuf, uint8_t len);
@@ -28,7 +28,7 @@ uint8_t * USBD_Composite_ManufacturerStrDescriptor(USBD_SpeedTypeDef speed, uint
 uint8_t * USBD_Composite_ProductStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
 uint8_t * USBD_Composite_SerialStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
 uint8_t * USBD_Composite_ConfigStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
-uint8_t * USBD_Composite_InterfaceStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
+uint8_t * USBD_Composite_InterfaceStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length, uint8_t iInterf);
 
 USBD_DescriptorsTypeDef Composite_Desc =
 {
@@ -219,22 +219,30 @@ uint8_t * USBD_Composite_ConfigStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *
   * @param  length : Pointer to data length variable
   * @retval Pointer to descriptor buffer
   */
-uint8_t * USBD_Composite_InterfaceStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length)
+uint8_t * USBD_Composite_InterfaceStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *length, uint8_t iInterf)
 {
-  uint16_t len_aux1, len_aux2;
   if(speed == 0)
   {
-//	  USBD_GetString((uint8_t *)USBD_INTERFACE_COMP_STRING, USBD_StrDesc, length);
-    USBD_GetString((uint8_t *)USBD_INTERFACE_CDC_STRING, USBD_StrDesc, &len_aux1);
-    USBD_GetString((uint8_t *)USBD_INTERFACE_HID_STRING, &USBD_StrDesc[len_aux1], &len_aux2);
+	  if(iInterf == 5)
+		  USBD_GetString((uint8_t *)USBD_INTERFACE_HID_STRING, USBD_StrDesc, length);
+	  else if(iInterf == 6)
+		  USBD_GetString((uint8_t *)USBD_INTERFACE_CDC_STRING, USBD_StrDesc, length);
+	  else
+	  {
+		  *length = 0;
+	  }
   }
   else
   {
-//	  USBD_GetString((uint8_t *)USBD_INTERFACE_COMP_STRING, USBD_StrDesc, length);
-    USBD_GetString((uint8_t *)USBD_INTERFACE_CDC_STRING, USBD_StrDesc, &len_aux1);
-    USBD_GetString((uint8_t *)USBD_INTERFACE_HID_STRING, &USBD_StrDesc[len_aux1], &len_aux2);
+	  if(iInterf == 5)
+		  USBD_GetString((uint8_t *)USBD_INTERFACE_HID_STRING, USBD_StrDesc, length);
+	  else if(iInterf == 6)
+		  USBD_GetString((uint8_t *)USBD_INTERFACE_CDC_STRING, USBD_StrDesc, length);
+	  else
+	  {
+		  *length = 0;
+	  }
   }
-  *length =  len_aux1 + len_aux2;
   return USBD_StrDesc;
 }
 
