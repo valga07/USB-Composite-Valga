@@ -875,6 +875,177 @@ uint32_t USBD_HID_GetPollingInterval(USBD_HandleTypeDef *pdev)
   * @}
   */
 
+ HIDLOP_TransferHandler hHIDTransfer =
+ {
+ 	.HID_StateMachine = LOP_IDLE,
+ 	.TxBuffer = NULL,
+ 	.MessageSize = 0,
+ 	.RemainingSize = 0,
+ 	.TransferCompletedCallBack = NULL,
+ 	.SendNextChar = NULL
+ };
+ uint8_t BufferSend[8] ={1,0,0,0,0,0,0,0};
+
+ static void Ascii2Keyboard(uint8_t *KeyBoardBuff, uint8_t AsciiVal);
+
+ HIDLOP_FSM SendMessageHID (uint8_t *Buffer, uint32_t SizeOfMsg)
+ {
+ 	if(hHIDTransfer.HID_StateMachine != LOP_IDLE)
+ 		return LOP_BUSY;
+ 	if(!SizeOfMsg)
+ 		return LOP_IDLE;
+ 	else if(SizeOfMsg == 1)
+ 	{
+ 		Ascii2Keyboard(BufferSend, KeyBoardBuff[0]);
+ 		USBD_HID_SendReport(&hUsbDeviceFS, BufferSend, 8);
+ 		return LOP_IDLE;
+ 	}
+ 	else
+ 	{
+ 		hHIDTransfer.HID_StateMachine = LOP_BUSY;
+ 		hHIDTransfer.TxBuffer = Buffer;
+ 		MessageSize = SizeOfMsg;
+ 		Ascii2Keyboard(BufferSend, KeyBoardBuff[0]);
+ 		USBD_HID_SendReport(&hUsbDeviceFS, BufferSend, 8);
+ 		hHIDTransfer.RemainingSize = SizeOfMsg - 1;
+ 		return LOP_OK;
+ 	}
+ }
+
+ static void Ascii2Keyboard(uint8_t *KeyBoardBuff, uint8_t AsciiVal)
+ {
+ 	const uint8_t ascii2kbNumbers [10] = {KEY_0_CPARENTHESIS, KEY_1_EXCLAMATION_MARK, KEY_2_AT,
+ 		KEY_3_NUMBER_SIGN, KEY_4_DOLLAR, KEY_5_PERCENT, KEY_6_CARET, KEY_7_AMPERSAND,
+ 		KEY_8_ASTERISK, KEY_9_OPARENTHESIS};
+ 		if((AsciiVal >= 65) && (AsciiVal <= 90))
+ 		{
+ 			KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 			KeyBoardBuff[4] = AsciiVal - 61;
+ 		}
+ 		else if((AsciiVal >= 97) && (AsciiVal <= 122))
+ 		{
+ 			KeyBoardBuff[2] = 0x00;
+ 			KeyBoardBuff[4] = AsciiVal - 93;
+ 		}
+ 		else if((AsciiVal >= 48) && (AsciiVal <= 57))
+ 		{
+ 			KeyBoardBuff[2] = 0x00;
+ 			KeyBoardBuff[4] = ascii2kbNumbers[AsciiVal - 48];
+ 		}
+ 		else if((AsciiVal == 0x0D) || (AsciiVal == 0x0A))
+ 		{
+ 			KeyBoardBuff[2] = 0x00;
+ 			KeyBoardBuff[4] = KEY_ENTER;
+ 			hHIDTransfer.RemainingSize = 0;
+ 		}
+ 		else
+ 			switch(AsciiVal)
+ 			{
+ 				case(' '):
+ 					KeyBoardBuff[2] = 0x00;
+ 					KeyBoardBuff[4] = KEY_SPACEBAR;
+ 						break;
+ 				case('!'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[1];
+ 						break;
+ 				case('@'):
+ 					KeyBoardBuff[2] = KEY_RIGHTALT;
+ 					KeyBoardBuff[4] = KEY_Q;
+ 						break;
+ 				case('#'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[3];
+ 						break;
+ 				case('$'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[4];
+ 						break;
+ 				case('%'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[5];
+ 						break;
+ 				case('&'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[6];
+ 						break;
+ 				case('/'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[7];
+ 						break;
+ 				case('('):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[8];
+ 						break;
+ 				case(')'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[9];
+ 						break;
+ 				case('='):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 					KeyBoardBuff[4] = ascii2kbNumbers[0];
+ 						break;
+ 				case('-'):
+ 					KeyBoardBuff[2] = 0x00;
+ 				//KeyBoardBuff[4] = KEY_MINUS_UNDERSCORE;
+ 				KeyBoardBuff[4] = KEY_SLASH_QUESTION;
+ 						break;
+ 				case('_'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 				//KeyBoardBuff[4] = KEY_MINUS_UNDERSCORE;
+ 				KeyBoardBuff[4] = KEY_SLASH_QUESTION;
+ 						break;
+ 				case('"'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 				KeyBoardBuff[4] = ascii2kbNumbers[2];
+ 						break;
+ 				case('?'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 				KeyBoardBuff[4] = KEY_EQUAL_PLUS;
+ 						break;
+ 				case('['):
+ 					KeyBoardBuff[2] = 0x00;
+ 				KeyBoardBuff[4] = KEY_OBRACKET_AND_OBRACE;
+ 						break;
+ 				case('{'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 				KeyBoardBuff[4] = KEY_OBRACKET_AND_OBRACE;
+ 						break;
+ 				case(']'):
+ 					KeyBoardBuff[2] = 0x00;
+ 				KeyBoardBuff[4] = KEY_CBRACKET_AND_CBRACE;
+ 						break;
+ 				case('}'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 				KeyBoardBuff[4] = KEY_CBRACKET_AND_CBRACE;
+ 						break;
+ 				case('*'):
+ 					KeyBoardBuff[2] = 0x00;
+ 				KeyBoardBuff[4] = KEY_KEYPAD_ASTERIKS;
+ 						break;
+ 				case('+'):
+ 					KeyBoardBuff[2] = 0x00;
+ 				KeyBoardBuff[4] = KEY_KEYPAD_PLUS;
+ 						break;
+ 				case('.'):
+ 					KeyBoardBuff[2] = 0x00;
+ 				KeyBoardBuff[4] = KEY_DOT_GREATER;
+ 						break;
+ 				case(':'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 				KeyBoardBuff[4] = KEY_DOT_GREATER;
+ 						break;
+ 				case(';'):
+ 					KeyBoardBuff[2] = KEY_LEFTSHIFT;
+ 				KeyBoardBuff[4] = KEY_COMMA_AND_LESS;
+ 						break;
+ 				default:
+ 					KeyBoardBuff[2] = 0x00;
+ 					KeyBoardBuff[4] = KEY_KEYPAD_PERCENT;
+ 						break;
+
+ 			}
+ }
 
 /**
   * @}
