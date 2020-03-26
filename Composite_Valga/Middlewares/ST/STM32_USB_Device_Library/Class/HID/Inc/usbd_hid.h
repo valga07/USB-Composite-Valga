@@ -376,11 +376,11 @@ HIDLOP_FSM HID_StateMachine;
 uint8_t *TxBuffer;
 uint32_t MessageSize;
 uint32_t RemainingSize;
-void (*TransferCompletedCallBack)(void);
-void (*SendNextChar)(struct __HIDLOP_TransHandler hTransf);
+void (*TransferCompletedCallBack)(void *ptr);
+void (*SendNextChar)(USBD_HandleTypeDef *pdev,struct __HIDLOP_TransHandler *hTransf);
 }HIDLOP_TransferHandler;
 
-HIDLOP_FSM SendMessageHID (uint8_t *Buffer, uint32_t SizeOfMsg);
+HIDLOP_FSM SendMessageHID (USBD_HandleTypeDef *pdev, uint8_t *Buffer, uint32_t SizeOfMsg);
 
 /*************************************************************************/
 

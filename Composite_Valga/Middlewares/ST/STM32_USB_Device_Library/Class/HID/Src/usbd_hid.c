@@ -835,6 +835,8 @@ uint32_t USBD_HID_GetPollingInterval(USBD_HandleTypeDef *pdev)
   return USBD_HID_OtherSpeedCfgDesc;
 }
 
+ extern HIDLOP_TransferHandler hHIDTransfer;
+
 /**
   * @brief  USBD_HID_DataIn
   *         handle data IN Stage
@@ -850,6 +852,7 @@ uint32_t USBD_HID_GetPollingInterval(USBD_HandleTypeDef *pdev)
   /* Ensure that the FIFO is empty before a new transfer, this condition could
   be caused by  a new transfer before the end of the previous transfer */
   ((USBD_HID_HandleTypeDef *)compHandle->hid)->state = HID_IDLE;
+  hHIDTransfer.SendNextChar(pdev, &hHIDTransfer);
   return USBD_OK;
 }
 
@@ -875,20 +878,44 @@ uint32_t USBD_HID_GetPollingInterval(USBD_HandleTypeDef *pdev)
   * @}
   */
 
+ static void Ascii2Keyboard(uint8_t *KeyBoardBuff, uint8_t AsciiVal);
+ __weak void SendNextCharCallBack(USBD_HandleTypeDef *pdev, HIDLOP_TransferHandler *hTransf);
+ __weak void TransferCompletedCallBack(void *ptr);
+
  HIDLOP_TransferHandler hHIDTransfer =
  {
  	.HID_StateMachine = LOP_IDLE,
  	.TxBuffer = NULL,
  	.MessageSize = 0,
  	.RemainingSize = 0,
- 	.TransferCompletedCallBack = NULL,
- 	.SendNextChar = NULL
+ 	.TransferCompletedCallBack = TransferCompletedCallBack,
+ 	.SendNextChar = SendNextCharCallBack
  };
  uint8_t BufferSend[8] ={1,0,0,0,0,0,0,0};
 
- static void Ascii2Keyboard(uint8_t *KeyBoardBuff, uint8_t AsciiVal);
 
- HIDLOP_FSM SendMessageHID (uint8_t *Buffer, uint32_t SizeOfMsg)
+ __weak void SendNextCharCallBack(USBD_HandleTypeDef *pdev, HIDLOP_TransferHandler *hTransf)
+ {
+	 if(hTransf->RemainingSize == 0)
+	 {
+		 hTransf->HID_StateMachine = LOP_IDLE;
+		 hTransf->MessageSize = 0;
+		 hTransf->TransferCompletedCallBack(NULL);
+	 }
+	 else
+	 {
+		 Ascii2Keyboard(BufferSend, hTransf->TxBuffer[hTransf->MessageSize - hTransf->RemainingSize]);
+		 USBD_HID_SendReport(pdev, BufferSend, 8);
+		 hTransf->RemainingSize--;
+	 }
+ }
+
+ __weak void TransferCompletedCallBack(void *ptr)
+ {
+	 UNUSED(ptr);
+ }
+
+ HIDLOP_FSM SendMessageHID (USBD_HandleTypeDef *pdev, uint8_t *Buffer, uint32_t SizeOfMsg)
  {
  	if(hHIDTransfer.HID_StateMachine != LOP_IDLE)
  		return LOP_BUSY;
@@ -896,17 +923,17 @@ uint32_t USBD_HID_GetPollingInterval(USBD_HandleTypeDef *pdev)
  		return LOP_IDLE;
  	else if(SizeOfMsg == 1)
  	{
- 		Ascii2Keyboard(BufferSend, KeyBoardBuff[0]);
- 		USBD_HID_SendReport(&hUsbDeviceFS, BufferSend, 8);
+ 		Ascii2Keyboard(BufferSend, Buffer[0]);
+ 		USBD_HID_SendReport(pdev, BufferSend, 8);
  		return LOP_IDLE;
  	}
  	else
  	{
  		hHIDTransfer.HID_StateMachine = LOP_BUSY;
  		hHIDTransfer.TxBuffer = Buffer;
- 		MessageSize = SizeOfMsg;
- 		Ascii2Keyboard(BufferSend, KeyBoardBuff[0]);
- 		USBD_HID_SendReport(&hUsbDeviceFS, BufferSend, 8);
+ 		hHIDTransfer.MessageSize = SizeOfMsg;
+ 		Ascii2Keyboard(BufferSend, Buffer[0]);
+ 		USBD_HID_SendReport(pdev, BufferSend, 8);
  		hHIDTransfer.RemainingSize = SizeOfMsg - 1;
  		return LOP_OK;
  	}
